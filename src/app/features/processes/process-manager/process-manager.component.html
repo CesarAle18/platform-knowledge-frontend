@@ -1,0 +1,343 @@
+<div class="card">
+  <p-toast></p-toast>
+  <p-confirmDialog [style]="{ width: '450px' }"></p-confirmDialog>
+
+  <div class="card">
+    <p-toolbar styleClass="mb-4 gap-2">
+      <ng-template pTemplate="left">
+        <button
+          pButton
+          pRipple
+          label="Nuevo Proceso"
+          icon="pi pi-plus"
+          class="p-button-success mr-2"
+          (click)="openNew()"
+        ></button>
+      </ng-template>
+    </p-toolbar>
+
+    <p-table
+      #dt
+      [value]="processes"
+      [rows]="10"
+      [paginator]="true"
+      [globalFilterFields]="['title', 'description', 'category.name', 'status']"
+      [tableStyle]="{ 'min-width': '75rem' }"
+      [rowHover]="true"
+      dataKey="id"
+      [showCurrentPageReport]="true"
+      [loading]="loading"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} procesos"
+    >
+      <ng-template pTemplate="caption">
+        <div class="flex align-items-center justify-content-between">
+          <h5 class="m-0">Gestión de Procesos</h5>
+          <span class="p-input-icon-left">
+            <i class="pi pi-search"></i>
+            <input
+              pInputText
+              type="text"
+              (input)="dt.filterGlobal($event.target.value, 'contains')"
+              placeholder="Buscar..."
+            />
+          </span>
+        </div>
+      </ng-template>
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="title">
+            Título <p-sortIcon field="title"></p-sortIcon>
+          </th>
+          <th pSortableColumn="description">
+            Descripción <p-sortIcon field="description"></p-sortIcon>
+          </th>
+          <th pSortableColumn="categoryId">
+            Categoría <p-sortIcon field="categoryId"></p-sortIcon>
+          </th>
+          <th pSortableColumn="status">
+            Estado <p-sortIcon field="status"></p-sortIcon>
+          </th>
+          <th pSortableColumn="currentVersion.versionNumber">
+            Versión
+            <p-sortIcon field="currentVersion.versionNumber"></p-sortIcon>
+          </th>
+          <th pSortableColumn="createdAt">
+            Creado <p-sortIcon field="createdAt"></p-sortIcon>
+          </th>
+          <th>Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-process>
+        <tr>
+          <td>{{ process.title }}</td>
+          <td>
+            {{ process.description | slice : 0 : 50
+            }}{{ process.description?.length > 50 ? "..." : "" }}
+          </td>
+          <td>{{ getCategoryName(process.categoryId) }}</td>
+          <td>
+            <p-tag
+              [value]="getStatusLabel(process.status)"
+              [severity]="getStatusSeverity(process.status)"
+            ></p-tag>
+          </td>
+          <td>{{ process.currentVersion?.versionNumber || "Sin versión" }}</td>
+          <td>{{ process.createdAt | date : "dd/MM/yyyy" }}</td>
+          <td>
+            <div class="flex">
+              <button
+                pButton
+                pRipple
+                icon="pi pi-eye"
+                class="p-button-rounded p-button-info mr-2"
+                (click)="viewProcess(process)"
+              ></button>
+              <button
+                pButton
+                pRipple
+                icon="pi pi-pencil"
+                class="p-button-rounded p-button-success mr-2"
+                (click)="editProcess(process)"
+              ></button>
+              <button
+                pButton
+                pRipple
+                icon="pi pi-history"
+                class="p-button-rounded p-button-warning mr-2"
+                (click)="createNewVersion(process)"
+                pTooltip="Nueva versión"
+              ></button>
+              <button
+                pButton
+                pRipple
+                icon="pi pi-trash"
+                class="p-button-rounded p-button-danger"
+                (click)="deleteProcess(process)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="summary">
+        <div class="flex align-items-center justify-content-between">
+          Total de Procesos: {{ processes ? processes.length : 0 }}
+        </div>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Diálogo para crear/editar proceso -->
+  <p-dialog
+    [(visible)]="processDialog"
+    [style]="{ width: '700px' }"
+    header="Detalles del Proceso"
+    [modal]="true"
+    styleClass="p-fluid"
+  >
+    <form [formGroup]="processForm">
+      <div class="field">
+        <label for="title">Título</label>
+        <input
+          type="text"
+          pInputText
+          formControlName="title"
+          id="title"
+          required
+          autofocus
+        />
+        <small
+          class="p-error"
+          *ngIf="
+            processForm.get('title')?.invalid &&
+            processForm.get('title')?.touched
+          "
+        >
+          El título es obligatorio.
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="description">Descripción</label>
+        <textarea
+          pInputTextarea
+          formControlName="description"
+          id="description"
+          rows="5"
+          required
+        ></textarea>
+        <small
+          class="p-error"
+          *ngIf="
+            processForm.get('description')?.invalid &&
+            processForm.get('description')?.touched
+          "
+        >
+          La descripción es obligatoria.
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="categoryId">Categoría</label>
+        <p-dropdown
+          formControlName="categoryId"
+          [options]="categories"
+          optionLabel="name"
+          optionValue="id"
+          placeholder="Seleccionar Categoría"
+        ></p-dropdown>
+      </div>
+
+      <div class="field">
+        <label for="status">Estado</label>
+        <p-dropdown
+          formControlName="status"
+          [options]="statuses"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccionar Estado"
+        ></p-dropdown>
+      </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        pRipple
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-text"
+        (click)="hideDialog()"
+      ></button>
+      <button
+        pButton
+        pRipple
+        label="Guardar"
+        icon="pi pi-check"
+        class="p-button-text"
+        (click)="saveProcess()"
+      ></button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Diálogo para crear nueva versión -->
+  <p-dialog
+    [(visible)]="versionDialog"
+    [style]="{ width: '700px' }"
+    header="Nueva Versión"
+    [modal]="true"
+    styleClass="p-fluid"
+  >
+    <form [formGroup]="versionForm">
+      <div class="field">
+        <label for="versionNumber">Número de Versión</label>
+        <input
+          type="text"
+          pInputText
+          formControlName="versionNumber"
+          id="versionNumber"
+          required
+          autofocus
+        />
+        <small
+          class="p-error"
+          *ngIf="
+            versionForm.get('versionNumber')?.invalid &&
+            versionForm.get('versionNumber')?.touched
+          "
+        >
+          El número de versión es obligatorio.
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="content">Contenido</label>
+        <p-editor
+          formControlName="content"
+          [style]="{ height: '320px' }"
+        ></p-editor>
+        <small
+          class="p-error"
+          *ngIf="
+            versionForm.get('content')?.invalid &&
+            versionForm.get('content')?.touched
+          "
+        >
+          El contenido es obligatorio.
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="changeReason">Motivo del Cambio</label>
+        <textarea
+          pInputTextarea
+          formControlName="changeReason"
+          id="changeReason"
+          rows="3"
+          required
+        ></textarea>
+        <small
+          class="p-error"
+          *ngIf="
+            versionForm.get('changeReason')?.invalid &&
+            versionForm.get('changeReason')?.touched
+          "
+        >
+          El motivo del cambio es obligatorio.
+        </small>
+      </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        pRipple
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-text"
+        (click)="hideVersionDialog()"
+      ></button>
+      <button
+        pButton
+        pRipple
+        label="Guardar"
+        icon="pi pi-check"
+        class="p-button-text"
+        (click)="saveVersion()"
+      ></button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Diálogo de confirmación para eliminar proceso -->
+  <p-dialog
+    [(visible)]="deleteProcessDialog"
+    header="Confirmar"
+    [modal]="true"
+    [style]="{ width: '450px' }"
+  >
+    <div class="confirmation-content">
+      <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem"></i>
+      <span *ngIf="selectedProcess"
+        >¿Está seguro de eliminar el proceso <b>{{ selectedProcess.title }}</b
+        >?</span
+      >
+    </div>
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        pRipple
+        icon="pi pi-times"
+        class="p-button-text"
+        label="No"
+        (click)="deleteProcessDialog = false"
+      ></button>
+      <button
+        pButton
+        pRipple
+        icon="pi pi-check"
+        class="p-button-text"
+        label="Sí"
+        (click)="confirmDelete()"
+      ></button>
+    </ng-template>
+  </p-dialog>
+</div>

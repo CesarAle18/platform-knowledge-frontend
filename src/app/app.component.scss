@@ -1,0 +1,57 @@
+// Estilos principales para la aplicación
+
+:host {
+  display: block;
+  height: 100%;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+}
+
+.main-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+// Estilos para el área de contenido principal
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  transition: margin-left 0.3s ease;
+}
+
+// Ajustes cuando el sidebar está colapsado
+.sidebar-collapsed {
+  .content-area {
+    margin-left: 0;
+  }
+}
+
+// Estilos para la página de autenticación
+.auth-container {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f7f9;
+  background-image: linear-gradient(135deg, #f5f7f9 0%, #e8edf3 100%);
+}
+
+// Media queries para diseño responsive
+@media screen and (max-width: 768px) {
+  .main-container {
+    flex-direction: column;
+  }
+
+  .content-area {
+    padding: 1rem;
+  }
+}

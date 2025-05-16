@@ -1,0 +1,331 @@
+<div class="content-container">
+  <p-toast></p-toast>
+
+  <p-toolbar styleClass="mb-4">
+    <ng-template pTemplate="left">
+      <h1>Biblioteca de Contenidos</h1>
+    </ng-template>
+    <ng-template pTemplate="right">
+      <button
+        pButton
+        pRipple
+        label="Nuevo Archivo"
+        icon="pi pi-plus"
+        class="p-button-success mr-2"
+        (click)="openNewFileDialog()"
+      ></button>
+    </ng-template>
+  </p-toolbar>
+
+  <div class="p-grid p-fluid mb-4">
+    <div class="p-col-12 p-md-6">
+      <app-search-bar
+        (search)="onSearch($event)"
+        placeholder="Buscar en biblioteca..."
+      ></app-search-bar>
+    </div>
+    <div class="p-col-12 p-md-3">
+      <p-dropdown
+        [options]="categories"
+        [(ngModel)]="selectedCategory"
+        optionLabel="name"
+        placeholder="Filtrar por categoría"
+        (onChange)="onCategoryChange()"
+        [showClear]="true"
+        styleClass="w-full"
+      ></p-dropdown>
+    </div>
+    <div class="p-col-12 p-md-3">
+      <p-dropdown
+        [options]="[
+          { label: 'Todos', value: '' },
+          { label: 'Documentos', value: 'document' },
+          { label: 'Imágenes', value: 'image' },
+          { label: 'Videos', value: 'video' },
+          { label: 'Presentaciones', value: 'presentation' },
+          { label: 'Otros', value: 'other' }
+        ]"
+        [(ngModel)]="fileTypeFilter"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Tipo de archivo"
+        (onChange)="onFileTypeChange()"
+        styleClass="w-full"
+      ></p-dropdown>
+    </div>
+  </div>
+
+  <p-fileUpload
+    name="files[]"
+    url="./upload"
+    (uploadHandler)="onFileUpload($event)"
+    accept=".pdf,.jpg,.jpeg,.png,.ppt,.pptx,.mp4,.docx,.xlsx,.txt"
+    [multiple]="true"
+    [showUploadButton]="true"
+    [showCancelButton]="false"
+    chooseLabel="Seleccionar archivos"
+    uploadLabel="Cargar archivos"
+  >
+    <ng-template pTemplate="content">
+      <p>
+        Arrastre archivos aquí para cargarlos o use el botón "Seleccionar
+        archivos".
+      </p>
+      <p>
+        <small
+          >Formatos aceptados: PDF, JPG, PNG, PPT, MP4, DOCX, XLSX, TXT</small
+        >
+      </p>
+    </ng-template>
+  </p-fileUpload>
+
+  <p-table
+    [value]="files"
+    [paginator]="true"
+    [rows]="10"
+    [showCurrentPageReport]="true"
+    [lazy]="true"
+    (onLazyLoad)="loadFiles($event)"
+    [loading]="loading"
+    [totalRecords]="totalRecords"
+    [rowsPerPageOptions]="[5, 10, 20]"
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
+    [globalFilterFields]="['name', 'type', 'category.name']"
+    styleClass="p-datatable-gridlines p-datatable-responsive"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="name">
+          Nombre <p-sortIcon field="name"></p-sortIcon>
+        </th>
+        <th pSortableColumn="type">
+          Tipo <p-sortIcon field="type"></p-sortIcon>
+        </th>
+        <th pSortableColumn="size">
+          Tamaño <p-sortIcon field="size"></p-sortIcon>
+        </th>
+        <th>Categoría</th>
+        <th>Etiquetas</th>
+        <th pSortableColumn="createdAt">
+          Fecha <p-sortIcon field="createdAt"></p-sortIcon>
+        </th>
+        <th>Acciones</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-file>
+      <tr>
+        <td>{{ file.name }}</td>
+        <td>
+          <p-tag
+            [value]="file.type"
+            [severity]="getFileTypeClass(file.type)"
+            [icon]="getFileTypeIcon(file.type)"
+          ></p-tag>
+        </td>
+        <td>{{ file.size | fileSize }}</td>
+        <td>{{ file.category?.name || "Sin categoría" }}</td>
+        <td>
+          <div class="tag-container">
+            <p-chip
+              *ngFor="let tag of file.tags"
+              [label]="tag.name"
+              styleClass="mr-1 mb-1"
+            ></p-chip>
+            <span *ngIf="!file.tags?.length">Sin etiquetas</span>
+          </div>
+        </td>
+        <td>{{ file.createdAt | date : "dd/MM/yyyy" }}</td>
+        <td>
+          <div class="action-buttons">
+            <button
+              pButton
+              pRipple
+              icon="pi pi-eye"
+              class="p-button-rounded p-button-info mr-2"
+              (click)="onViewFile(file)"
+              pTooltip="Ver"
+            ></button>
+            <button
+              pButton
+              pRipple
+              icon="pi pi-pencil"
+              class="p-button-rounded p-button-success mr-2"
+              (click)="onEditFile(file)"
+              pTooltip="Editar"
+            ></button>
+            <button
+              pButton
+              pRipple
+              icon="pi pi-trash"
+              class="p-button-rounded p-button-danger"
+              (click)="onDeleteFile(file)"
+              pTooltip="Eliminar"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="7">
+          <div class="empty-message">
+            <i class="pi pi-folder-open" style="font-size: 3rem"></i>
+            <p>No se encontraron archivos</p>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- Diálogo para ver archivo -->
+  <p-dialog
+    [(visible)]="displayViewDialog"
+    header="Vista previa"
+    [style]="{ width: '80vw' }"
+    [modal]="true"
+  >
+    <div *ngIf="selectedFile" class="file-preview-container">
+      <app-file-viewer [file]="selectedFile"></app-file-viewer>
+      <div class="file-details mt-3">
+        <h3>{{ selectedFile.name }}</h3>
+        <p><strong>Tipo:</strong> {{ selectedFile.type }}</p>
+        <p><strong>Tamaño:</strong> {{ selectedFile.size | fileSize }}</p>
+        <p>
+          <strong>Categoría:</strong>
+          {{ selectedFile.category?.name || "Sin categoría" }}
+        </p>
+        <div class="file-tags">
+          <strong>Etiquetas:</strong>
+          <p-chip
+            *ngFor="let tag of selectedFile.tags"
+            [label]="tag.name"
+            styleClass="mr-1 mb-1"
+          ></p-chip>
+          <span *ngIf="!selectedFile.tags?.length">Sin etiquetas</span>
+        </div>
+      </div>
+    </div>
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        pRipple
+        label="Cerrar"
+        icon="pi pi-times"
+        class="p-button-text"
+        (click)="closeViewDialog()"
+      ></button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Diálogo para crear/editar archivo -->
+  <p-dialog
+    [(visible)]="displayFileDialog"
+    [style]="{ width: '450px' }"
+    header="Detalles del Archivo"
+    [modal]="true"
+    styleClass="p-fluid"
+  >
+    <ng-template pTemplate="content">
+      <div class="p-field">
+        <label for="name">Nombre</label>
+        <input
+          type="text"
+          pInputText
+          id="name"
+          [(ngModel)]="selectedFile.name"
+          required
+          autofocus
+        />
+      </div>
+
+      <div class="p-field">
+        <label for="type">Tipo</label>
+        <p-dropdown
+          id="type"
+          [options]="[
+            { label: 'Documento', value: 'document' },
+            { label: 'Imagen', value: 'image' },
+            { label: 'Video', value: 'video' },
+            { label: 'Presentación', value: 'presentation' },
+            { label: 'Otro', value: 'other' }
+          ]"
+          [(ngModel)]="selectedFile.type"
+          optionLabel="label"
+          optionValue="value"
+        ></p-dropdown>
+      </div>
+
+      <div class="p-field">
+        <label for="category">Categoría</label>
+        <p-dropdown
+          id="category"
+          [options]="categories"
+          [(ngModel)]="selectedFile.categoryId"
+          optionLabel="name"
+          optionValue="id"
+          [showClear]="true"
+          placeholder="Seleccione una categoría"
+        ></p-dropdown>
+      </div>
+
+      <div class="p-field">
+        <label for="concept">Concepto relacionado (opcional)</label>
+        <p-dropdown
+          id="concept"
+          [options]="concepts"
+          [(ngModel)]="selectedFile.conceptId"
+          optionLabel="name"
+          optionValue="id"
+          [showClear]="true"
+          placeholder="Seleccione un concepto"
+        ></p-dropdown>
+      </div>
+
+      <div class="p-field">
+        <label for="process">Proceso relacionado (opcional)</label>
+        <p-dropdown
+          id="process"
+          [options]="processes"
+          [(ngModel)]="selectedFile.processId"
+          optionLabel="title"
+          optionValue="id"
+          [showClear]="true"
+          placeholder="Seleccione un proceso"
+        ></p-dropdown>
+      </div>
+
+      <div class="p-field">
+        <label for="tags">Etiquetas</label>
+        <p-dropdown
+          id="tags"
+          [options]="availableTags"
+          [(ngModel)]="selectedTags"
+          optionLabel="name"
+          [group]="true"
+          [showClear]="true"
+          [multiple]="true"
+          placeholder="Seleccione etiquetas"
+        ></p-dropdown>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        pRipple
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-text"
+        (click)="closeFileDialog()"
+      ></button>
+      <button
+        pButton
+        pRipple
+        label="Guardar"
+        icon="pi pi-check"
+        class="p-button-text"
+        (click)="saveFile()"
+      ></button>
+    </ng-template>
+  </p-dialog>
+</div>

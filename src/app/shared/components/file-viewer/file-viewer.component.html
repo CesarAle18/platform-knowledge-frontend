@@ -1,0 +1,73 @@
+<p-dialog
+  [visible]="visible"
+  [modal]="true"
+  [resizable]="true"
+  [draggable]="true"
+  [maximizable]="true"
+  [closeOnEscape]="true"
+  [closable]="true"
+  [header]="file?.name || 'Visor de archivo'"
+  [styleClass]="getDialogClass()"
+  [contentStyle]="{ overflow: 'hidden', padding: '0' }"
+  (onHide)="visible = false"
+>
+  <ng-container *ngIf="file; else noFile">
+    <div class="file-viewer-content">
+      <!-- Imagen -->
+      <div *ngIf="isImage()" class="image-container">
+        <img [src]="fileUrl" [alt]="file.name" class="w-full h-auto" />
+      </div>
+
+      <!-- PDF -->
+      <iframe *ngIf="isPdf()" [src]="fileUrl" class="pdf-frame"></iframe>
+
+      <!-- Video -->
+      <div *ngIf="isVideo()" class="video-container">
+        <video controls class="w-full">
+          <source [src]="fileUrl" [type]="file.mimeType" />
+          Tu navegador no soporta la reproducción de videos.
+        </video>
+      </div>
+
+      <!-- Presentación -->
+      <iframe
+        *ngIf="isPresentation()"
+        [src]="fileUrl"
+        class="presentation-frame"
+      ></iframe>
+
+      <!-- Otros tipos de archivo -->
+      <div
+        *ngIf="!isImage() && !isPdf() && !isVideo() && !isPresentation()"
+        class="generic-file"
+      >
+        <div class="file-icon">
+          <i class="pi pi-file text-5xl"></i>
+        </div>
+        <div class="file-info">
+          <h3>{{ file.name }}</h3>
+          <p>Tipo: {{ file.mimeType }}</p>
+          <p>Tamaño: {{ file.size | fileSize }}</p>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-template #noFile>
+    <div class="no-file">
+      <i class="pi pi-exclamation-triangle text-3xl"></i>
+      <p>No se ha seleccionado ningún archivo para visualizar.</p>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      icon="pi pi-download"
+      label="Descargar"
+      class="p-button-outlined"
+      (click)="download()"
+      [disabled]="!file"
+    ></button>
+  </ng-template>
+</p-dialog>

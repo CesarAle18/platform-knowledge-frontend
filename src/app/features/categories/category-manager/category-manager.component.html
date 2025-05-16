@@ -1,0 +1,144 @@
+<div class="category-manager-container">
+  <p-toast></p-toast>
+  <p-confirmDialog [style]="{ width: '450px' }"></p-confirmDialog>
+
+  <p-toolbar styleClass="mb-4">
+    <ng-template pTemplate="left">
+      <h1>Gestión de Categorías</h1>
+    </ng-template>
+    <ng-template pTemplate="right">
+      <button
+        pButton
+        pRipple
+        label="Nueva Categoría"
+        icon="pi pi-plus"
+        class="p-button-success"
+        (click)="openNewCategoryDialog()"
+      ></button>
+    </ng-template>
+  </p-toolbar>
+
+  <div class="p-grid">
+    <div class="p-col-12">
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="p-card-title">Estructura de Categorías</div>
+        </ng-template>
+
+        <p-tree
+          [value]="categoryTree"
+          [loading]="loading"
+          styleClass="category-tree"
+        >
+          <ng-template pTemplate="default" let-node>
+            <div class="tree-node-content">
+              <span>{{ node.label }}</span>
+              <div class="tree-node-actions">
+                <button
+                  pButton
+                  pRipple
+                  icon="pi pi-pencil"
+                  class="p-button-rounded p-button-text p-button-sm"
+                  (click)="editCategory(node)"
+                ></button>
+                <button
+                  pButton
+                  pRipple
+                  icon="pi pi-trash"
+                  class="p-button-rounded p-button-text p-button-danger p-button-sm"
+                  (click)="confirmDeleteCategory(node)"
+                ></button>
+              </div>
+            </div>
+          </ng-template>
+        </p-tree>
+
+        <div
+          *ngIf="!loading && categoryTree.length === 0"
+          class="empty-categories"
+        >
+          <i class="pi pi-folder-open" style="font-size: 3rem"></i>
+          <p>No hay categorías creadas</p>
+          <button
+            pButton
+            pRipple
+            label="Crear primera categoría"
+            icon="pi pi-plus"
+            (click)="openNewCategoryDialog()"
+          ></button>
+        </div>
+      </p-card>
+    </div>
+  </div>
+
+  <!-- Diálogo para crear/editar categoría -->
+  <p-dialog
+    [(visible)]="displayCategoryDialog"
+    [style]="{ width: '450px' }"
+    [header]="isNewCategory ? 'Nueva Categoría' : 'Editar Categoría'"
+    [modal]="true"
+    styleClass="p-fluid"
+  >
+    <ng-template pTemplate="content">
+      <div class="p-field">
+        <label for="name">Nombre</label>
+        <input
+          type="text"
+          pInputText
+          id="name"
+          [(ngModel)]="selectedCategory.name"
+          required
+          autofocus
+        />
+      </div>
+
+      <div class="p-field">
+        <label for="slug">Slug (URL)</label>
+        <input
+          type="text"
+          pInputText
+          id="slug"
+          [(ngModel)]="selectedCategory.slug"
+        />
+        <small class="p-text-secondary"
+          >Si se deja vacío, se generará automáticamente a partir del
+          nombre</small
+        >
+      </div>
+
+      <div class="p-field">
+        <label for="parent">Categoría Padre</label>
+        <p-dropdown
+          id="parent"
+          [options]="filterParentOptions()"
+          [(ngModel)]="selectedParent"
+          optionLabel="name"
+          [showClear]="true"
+          placeholder="Seleccione una categoría padre (opcional)"
+        ></p-dropdown>
+        <small class="p-text-secondary"
+          >Si no se selecciona, será una categoría principal</small
+        >
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        pRipple
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-text"
+        (click)="closeCategoryDialog()"
+      ></button>
+      <button
+        pButton
+        pRipple
+        label="Guardar"
+        icon="pi pi-check"
+        class="p-button-text"
+        (click)="saveCategory()"
+      ></button>
+    </ng-template>
+  </p-dialog>
+</div>

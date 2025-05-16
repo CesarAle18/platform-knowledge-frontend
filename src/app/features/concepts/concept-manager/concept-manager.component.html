@@ -1,0 +1,289 @@
+<div class="card">
+  <p-toast></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+
+  <div class="card-header">
+    <h1>Administrador de Conceptos</h1>
+    <p>Registra y administra conceptos técnicos estandarizados</p>
+  </div>
+
+  <div class="card-body">
+    <div class="flex justify-content-between align-items-center mb-4">
+      <h2>Conceptos Registrados</h2>
+      <p-button
+        label="Nuevo Concepto"
+        icon="pi pi-plus"
+        styleClass="p-button-success"
+        (click)="openNew()"
+      >
+      </p-button>
+    </div>
+
+    <p-table
+      #dt
+      [value]="concepts"
+      [rows]="10"
+      [paginator]="true"
+      [rowHover]="true"
+      styleClass="p-datatable-gridlines p-datatable-sm"
+      [globalFilterFields]="[
+        'name',
+        'description',
+        'client.name',
+        'coordinator',
+        'zone.name'
+      ]"
+    >
+      <ng-template pTemplate="caption">
+        <div class="flex justify-content-between align-items-center">
+          <h5 class="m-0">Gestión de Conceptos</h5>
+          <span class="p-input-icon-left">
+            <i class="pi pi-search"></i>
+            <input
+              pInputText
+              type="text"
+              placeholder="Buscar..."
+              (input)="dt.filterGlobal($event.target.value, 'contains')"
+            />
+          </span>
+        </div>
+      </ng-template>
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="name">
+            Nombre <p-sortIcon field="name"></p-sortIcon>
+          </th>
+          <th pSortableColumn="description">
+            Descripción <p-sortIcon field="description"></p-sortIcon>
+          </th>
+          <th pSortableColumn="client.name">
+            Cliente <p-sortIcon field="client.name"></p-sortIcon>
+          </th>
+          <th pSortableColumn="coordinator">
+            Coordinador <p-sortIcon field="coordinator"></p-sortIcon>
+          </th>
+          <th pSortableColumn="zone.name">
+            Zona <p-sortIcon field="zone.name"></p-sortIcon>
+          </th>
+          <th>Etiquetas</th>
+          <th>Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-concept>
+        <tr>
+          <td>{{ concept.name }}</td>
+          <td>
+            {{ concept.description | slice : 0 : 50
+            }}{{ concept.description.length > 50 ? "..." : "" }}
+          </td>
+          <td>{{ concept.client?.name }}</td>
+          <td>{{ concept.coordinator }}</td>
+          <td>{{ concept.zone?.name }}</td>
+          <td>
+            <span *ngFor="let tag of concept.tags" class="tag-item">
+              {{ tag.name }}
+            </span>
+          </td>
+          <td>
+            <div class="flex gap-2">
+              <button
+                pButton
+                pRipple
+                icon="pi pi-pencil"
+                class="p-button-rounded p-button-info p-button-sm"
+                (click)="editConcept(concept)"
+              ></button>
+              <button
+                pButton
+                pRipple
+                icon="pi pi-trash"
+                class="p-button-rounded p-button-danger p-button-sm"
+                (click)="deleteConcept(concept)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center">No se encontraron conceptos.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Diálogo para añadir/editar conceptos -->
+  <p-dialog
+    [(visible)]="conceptDialog"
+    [style]="{ width: '650px' }"
+    header="{{ isEditing ? 'Editar Concepto' : 'Nuevo Concepto' }}"
+    [modal]="true"
+    styleClass="p-fluid"
+  >
+    <form [formGroup]="conceptForm">
+      <div class="grid">
+        <div class="col-12 mb-3">
+          <label for="name">Nombre del Concepto *</label>
+          <input
+            type="text"
+            pInputText
+            id="name"
+            formControlName="name"
+            required
+            [ngClass]="{
+              'ng-invalid ng-dirty':
+                submitted && conceptForm.controls['name'].invalid
+            }"
+          />
+          <small
+            class="p-error"
+            *ngIf="submitted && conceptForm.controls['name'].invalid"
+          >
+            El nombre es obligatorio.
+          </small>
+        </div>
+
+        <div class="col-12 mb-3">
+          <label for="description">Descripción *</label>
+          <textarea
+            pInputTextarea
+            id="description"
+            formControlName="description"
+            rows="3"
+            [ngClass]="{
+              'ng-invalid ng-dirty':
+                submitted && conceptForm.controls['description'].invalid
+            }"
+          ></textarea>
+          <small
+            class="p-error"
+            *ngIf="submitted && conceptForm.controls['description'].invalid"
+          >
+            La descripción es obligatoria.
+          </small>
+        </div>
+
+        <div class="col-6 mb-3">
+          <label for="clientId">Cliente</label>
+          <p-dropdown
+            id="clientId"
+            formControlName="clientId"
+            [options]="clients"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Seleccionar cliente"
+            [filter]="true"
+            filterBy="name"
+          >
+          </p-dropdown>
+        </div>
+
+        <div class="col-6 mb-3">
+          <label for="coordinator">Coordinador</label>
+          <input
+            type="text"
+            pInputText
+            id="coordinator"
+            formControlName="coordinator"
+          />
+        </div>
+
+        <div class="col-6 mb-3">
+          <label for="zoneId">Zona</label>
+          <p-dropdown
+            id="zoneId"
+            formControlName="zoneId"
+            [options]="zones"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Seleccionar zona"
+            [filter]="true"
+            filterBy="name"
+          >
+          </p-dropdown>
+        </div>
+
+        <div class="col-12 mb-3">
+          <label for="tags">Etiquetas</label>
+          <p-multiSelect
+            id="tags"
+            formControlName="tags"
+            [options]="availableTags"
+            optionLabel="name"
+            placeholder="Seleccione etiquetas"
+          >
+          </p-multiSelect>
+        </div>
+
+        <div class="col-12 mb-3">
+          <label>Archivos Adjuntos</label>
+          <p-fileUpload
+            name="files"
+            [multiple]="true"
+            accept=".pdf,.jpg,.png,.ppt,.mp4"
+            [maxFileSize]="1000000"
+            [showUploadButton]="false"
+            [showCancelButton]="false"
+            (onSelect)="onFileSelect($event)"
+          >
+            <ng-template pTemplate="content">
+              <div *ngIf="selectedFiles.length > 0" class="mt-2">
+                <h5>Archivos seleccionados:</h5>
+                <ul>
+                  <li *ngFor="let file of selectedFiles">
+                    {{ file.name }} -
+                    {{ file.size / 1024 | number : "1.0-2" }} KB
+                  </li>
+                </ul>
+              </div>
+              <div *ngIf="uploadedFiles.length > 0 && isEditing" class="mt-2">
+                <h5>Archivos existentes:</h5>
+                <ul>
+                  <li
+                    *ngFor="let file of uploadedFiles"
+                    class="flex align-items-center justify-content-between"
+                  >
+                    <span
+                      >{{ file.name }} -
+                      {{ file.size / 1024 | number : "1.0-2" }} KB</span
+                    >
+                    <button
+                      pButton
+                      pRipple
+                      type="button"
+                      icon="pi pi-trash"
+                      class="p-button-rounded p-button-danger p-button-sm"
+                      (click)="removeFile(file)"
+                    ></button>
+                  </li>
+                </ul>
+              </div>
+            </ng-template>
+          </p-fileUpload>
+        </div>
+      </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        pRipple
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-text"
+        (click)="hideDialog()"
+      ></button>
+      <button
+        pButton
+        pRipple
+        label="Guardar"
+        icon="pi pi-check"
+        class="p-button-text"
+        (click)="saveConcept()"
+      ></button>
+    </ng-template>
+  </p-dialog>
+</div>

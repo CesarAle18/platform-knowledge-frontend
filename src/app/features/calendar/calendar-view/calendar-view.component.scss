@@ -1,0 +1,101 @@
+.calendar-container {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.calendar-wrapper {
+  height: 100%;
+  width: 100%;
+}
+
+:host ::ng-deep {
+  .fc-button-primary {
+    background-color: #3f51b5;
+    border-color: #3f51b5;
+
+    &:hover {
+      background-color: #303f9f;
+      border-color: #303f9f;
+    }
+
+    &:active {
+      background-color: #283593;
+      border-color: #283593;
+    }
+  }
+
+  .fc-button-active {
+    background-color: #283593 !important;
+    border-color: #283593 !important;
+  }
+
+  .fc-toolbar-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .fc-daygrid-day-number {
+    padding: 4px;
+    color: #424242;
+  }
+
+  .fc-daygrid-day.fc-day-today {
+    background-color: rgba(63, 81, 181, 0.1);
+  }
+
+  .fc-event {
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 2px 4px;
+
+    .fc-event-title {
+      font-weight: 500;
+    }
+  }
+
+  .p-dialog .p-dialog-content {
+    padding: 2rem;
+  }
+
+  .p-calendar .p-inputtext {
+    width: 100%;
+  }
+
+  .p-dropdown {
+    width: 100%;
+  }
+}
+
+.color-legend {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+  border-radius: 50%;
+
+  &.process {
+    background-color: #4caf50;
+  }
+
+  &.concept {
+    background-color: #2196f3;
+  }
+
+  &.file {
+    background-color: #ffc107;
+  }
+
+  &.default {
+    background-color: #9c27b0;
+  }
+}
+
+.confirmation-content {
+  display: flex;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.field-checkbox {
+  margin: 1rem 0;
+}

@@ -1,0 +1,98 @@
+/* Estilos específicos para el componente de gestión de usuarios */
+
+:host ::ng-deep {
+  /* Estilos para la tabla */
+  .p-datatable {
+    .p-datatable-header {
+      padding: 1rem;
+      border-bottom: 0 none;
+    }
+
+    .p-paginator {
+      padding: 1rem;
+    }
+
+    .p-datatable-thead > tr > th {
+      text-align: left;
+      padding: 1rem;
+      font-weight: 600;
+    }
+
+    .p-datatable-tbody > tr > td {
+      padding: 1rem;
+      border: 0 none;
+    }
+
+    .p-dropdown-label {
+      margin-right: 0;
+    }
+  }
+
+  /* Estilos para el diálogo */
+  .p-dialog {
+    .p-dialog-header {
+      border-bottom: 1px solid #dee2e6;
+      padding: 1.5rem;
+    }
+
+    .p-dialog-content {
+      padding: 2rem;
+    }
+
+    .p-dialog-footer {
+      border-top: 1px solid #dee2e6;
+      padding: 1.5rem;
+      text-align: right;
+
+      button {
+        margin-left: 0.5rem;
+      }
+    }
+  }
+
+  /* Estilos para los campos de formulario */
+  .field {
+    margin-bottom: 1.5rem;
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+
+    input,
+    .p-inputtext,
+    .p-dropdown,
+    .p-password {
+      width: 100%;
+    }
+
+    small.p-error {
+      color: #f44336;
+      margin-top: 0.25rem;
+      display: block;
+    }
+  }
+
+  /* Estilos para las etiquetas de rol */
+  .p-tag {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  /* Ajuste para la toolbar */
+  .p-toolbar {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+
+  /* Ajustes responsivos */
+  @media screen and (max-width: 960px) {
+    .p-datatable .p-datatable-tbody > tr > td:last-child {
+      text-align: center;
+    }
+  }
+}

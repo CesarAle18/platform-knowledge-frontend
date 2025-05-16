@@ -1,0 +1,18 @@
+<div class="sidebar">
+  <div class="categories-section">
+    <h3>Categorías</h3>
+    <p-tree
+      [value]="categories"
+      selectionMode="single"
+      (onNodeSelect)="onCategorySelect($event)"
+    ></p-tree>
+  </div>
+
+  <div class="menu-section">
+    <p-panelMenu
+      [model]="menuItems"
+      [multiple]="false"
+      styleClass="sidebar-menu"
+    ></p-panelMenu>
+  </div>
+</div>

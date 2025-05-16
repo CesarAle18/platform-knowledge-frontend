@@ -1,0 +1,195 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1>Dashboard</h1>
+    <p>Bienvenido a la Plataforma de Conocimiento para Laboratorios</p>
+  </div>
+
+  <div class="dashboard-grid">
+    <!-- Estadísticas rápidas -->
+    <div class="stats-row p-grid">
+      <div class="p-col-12 p-md-4">
+        <p-card styleClass="stats-card">
+          <ng-template pTemplate="header">
+            <div class="stats-header">
+              <i class="pi pi-file-pdf"></i>
+              <h3>Archivos</h3>
+            </div>
+          </ng-template>
+          <div class="stats-content">
+            <h2>{{ recentFiles.length > 0 ? recentFiles.length : "..." }}</h2>
+            <p>Archivos recientes</p>
+          </div>
+          <ng-template pTemplate="footer">
+            <a routerLink="/content/file-upload">Gestionar archivos</a>
+          </ng-template>
+        </p-card>
+      </div>
+
+      <div class="p-col-12 p-md-4">
+        <p-card styleClass="stats-card">
+          <ng-template pTemplate="header">
+            <div class="stats-header">
+              <i class="pi pi-calendar"></i>
+              <h3>Eventos</h3>
+            </div>
+          </ng-template>
+          <div class="stats-content">
+            <h2>
+              {{ upcomingEvents.length > 0 ? upcomingEvents.length : "..." }}
+            </h2>
+            <p>Próximos eventos</p>
+          </div>
+          <ng-template pTemplate="footer">
+            <a routerLink="/calendar">Ver calendario</a>
+          </ng-template>
+        </p-card>
+      </div>
+
+      <div class="p-col-12 p-md-4">
+        <p-card styleClass="stats-card">
+          <ng-template pTemplate="header">
+            <div class="stats-header">
+              <i class="pi pi-sitemap"></i>
+              <h3>Procesos</h3>
+            </div>
+          </ng-template>
+          <div class="stats-content">
+            <h2>{{ contentStats?.datasets[0]?.data[2] || "..." }}</h2>
+            <p>Procesos documentados</p>
+          </div>
+          <ng-template pTemplate="footer">
+            <a routerLink="/processes">Ver procesos</a>
+          </ng-template>
+        </p-card>
+      </div>
+    </div>
+
+    <!-- Gráficos y tablas -->
+    <div class="p-grid">
+      <div class="p-col-12 p-md-6">
+        <p-card header="Distribución de Contenido por Categoría">
+          <div *ngIf="categoryStats" class="chart-container">
+            <p-chart
+              type="pie"
+              [data]="categoryStats"
+              [options]="{ responsive: true }"
+            ></p-chart>
+          </div>
+          <div *ngIf="!categoryStats" class="loading-placeholder">
+            Cargando estadísticas...
+          </div>
+        </p-card>
+      </div>
+
+      <div class="p-col-12 p-md-6">
+        <p-card header="Tipos de Archivos">
+          <div *ngIf="fileTypeStats" class="chart-container">
+            <p-chart
+              type="doughnut"
+              [data]="fileTypeStats"
+              [options]="{ responsive: true }"
+            ></p-chart>
+          </div>
+          <div *ngIf="!fileTypeStats" class="loading-placeholder">
+            Cargando estadísticas...
+          </div>
+        </p-card>
+      </div>
+    </div>
+
+    <div class="p-grid">
+      <div class="p-col-12 p-md-6">
+        <p-card header="Archivos Recientes">
+          <p-table
+            [value]="recentFiles"
+            [paginator]="false"
+            [rows]="5"
+            styleClass="p-datatable-sm"
+            [tableStyle]="{ 'min-width': '50rem' }"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-file>
+              <tr>
+                <td>{{ file.name }}</td>
+                <td>
+                  <span class="file-type-badge" [ngClass]="file.type">
+                    {{ file.type | titlecase }}
+                  </span>
+                </td>
+                <td>{{ formatDate(file.createdAt) }}</td>
+                <td>
+                  <a routerLink="/content/file-upload/{{ file.id }}">
+                    <i class="pi pi-eye"></i>
+                  </a>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="4" class="text-center">
+                  No hay archivos recientes
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-card>
+      </div>
+
+      <div class="p-col-12 p-md-6">
+        <p-card header="Próximos Eventos">
+          <p-table
+            [value]="upcomingEvents"
+            [paginator]="false"
+            [rows]="5"
+            styleClass="p-datatable-sm"
+            [tableStyle]="{ 'min-width': '50rem' }"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Título</th>
+                <th>Fecha inicio</th>
+                <th>Tipo</th>
+                <th>Acciones</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-event>
+              <tr>
+                <td>{{ event.title }}</td>
+                <td>{{ formatDate(event.startDate) }}</td>
+                <td>
+                  <span
+                    class="event-badge"
+                    [ngClass]="event.relatedType || 'general'"
+                  >
+                    {{
+                      event.relatedType
+                        ? event.relatedType
+                        : ("General" | titlecase)
+                    }}
+                  </span>
+                </td>
+                <td>
+                  <a routerLink="/calendar">
+                    <i class="pi pi-calendar"></i>
+                  </a>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="4" class="text-center">No hay eventos próximos</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-card>
+      </div>
+    </div>
+  </div>
+</div>

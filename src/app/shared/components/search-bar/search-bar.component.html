@@ -1,0 +1,38 @@
+<div class="search-bar">
+  <span class="p-input-icon-left p-input-icon-right w-full">
+    <i class="pi pi-search"></i>
+    <input 
+      type="text" 
+      pInputText 
+      [formControl]="searchControl" 
+      placeholder="Buscar conceptos, procesos, documentos..." 
+      class="w-full"
+      (keydown.enter)="onSearchSubmit()"
+    />
+    <i *ngIf="isSearching" class="pi pi-spin pi-spinner"></i>
+  </span>
+  
+  <div *ngIf="searchResults.length > 0" class="search-results">
+    <div class="search-results-header">
+      <span>Resultados de búsqueda</span>
+    </div>
+    <div class="search-results-list">
+      <div *ngFor="let result of searchResults" class="search-result-item" (click)="navigateToResult(result)">
+        <div class="result-icon">
+          <i *ngIf="result.type === 'concept'" class="pi pi-bookmark"></i>
+          <i *ngIf="result.type === 'process'" class="pi pi-sitemap"></i>
+          <i *ngIf="result.type === 'glossary'" class="pi pi-book"></i>
+          <i *ngIf="result.type === 'file'" class="pi pi-file"></i>
+        </div>
+        <div class="result-content">
+          <div class="result-title">{{ result.title || result.name || result.term }}</div>
+          <div class="result-description">{{ result.description || result.definition | slice:0:100 }}...</div>
+        </div>
+        <div class="result-type">{{ result.type }}</div>
+      </div>
+    </div>
+    <div class="search-results-footer">
+      <button pButton type="button" label="Ver todos los resultados" class="p-button-text" (click)="onSearchSubmit()"></button>
+    </div>
+  </div>
+</div>

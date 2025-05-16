@@ -1,0 +1,53 @@
+.header {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  height: 64px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  margin-right: 2rem;
+  
+  .title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+  }
+}
+
+.search {
+  flex: 1;
+  max-width: 500px;
+  margin: 0 1rem;
+}
+
+.main-menu {
+  background: transparent;
+  border: none;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    margin: 0 0.5rem;
+    
+    .user-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    
+    .user-role {
+      font-size: 0.8rem;
+      color: #666;
+    }
+  }
+}

@@ -1,0 +1,352 @@
+<div class="p-4">
+  <div class="flex flex-column gap-3">
+    <div class="flex justify-content-between align-items-center">
+      <h1 class="text-2xl font-bold">Gestión del Glosario</h1>
+      <button
+        pButton
+        pRipple
+        icon="pi pi-plus"
+        label="Nuevo Término"
+        class="p-button-success"
+        (click)="openNew()"
+      ></button>
+    </div>
+
+    <div class="card">
+      <p-toast></p-toast>
+      <p-confirmDialog [style]="{ width: '450px' }"></p-confirmDialog>
+
+      <div class="flex justify-content-end">
+        <span class="p-input-icon-left mb-3">
+          <i class="pi pi-search"></i>
+          <input
+            pInputText
+            type="text"
+            placeholder="Buscar"
+            (input)="applyFilterGlobal($event, 'contains')"
+          />
+        </span>
+      </div>
+
+      <p-table
+        #dt
+        [value]="glossaryItems"
+        [rows]="10"
+        [paginator]="true"
+        [globalFilterFields]="['term', 'definition']"
+        [tableStyle]="{ 'min-width': '75rem' }"
+        [loading]="isLoading"
+        [rowHover]="true"
+        dataKey="id"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} términos"
+        [showCurrentPageReport]="true"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="term">
+              Término <p-sortIcon field="term"></p-sortIcon>
+            </th>
+            <th pSortableColumn="definition">
+              Definición <p-sortIcon field="definition"></p-sortIcon>
+            </th>
+            <th pSortableColumn="categoryId">
+              Categoría <p-sortIcon field="categoryId"></p-sortIcon>
+            </th>
+            <th pSortableColumn="updatedAt">
+              Última Actualización <p-sortIcon field="updatedAt"></p-sortIcon>
+            </th>
+            <th style="width: 12rem">Acciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-glossary>
+          <tr>
+            <td>{{ glossary.term }}</td>
+            <td>
+              <div class="line-clamp-3" [innerHTML]="glossary.definition"></div>
+            </td>
+            <td>{{ getCategoryName(glossary.categoryId) }}</td>
+            <td>{{ glossary.updatedAt | date : "dd/MM/yyyy HH:mm" }}</td>
+            <td>
+              <div class="flex gap-2">
+                <button
+                  pButton
+                  pRipple
+                  icon="pi pi-pencil"
+                  class="p-button-rounded p-button-success mr-2"
+                  (click)="editGlossaryItem(glossary)"
+                ></button>
+                <button
+                  pButton
+                  pRipple
+                  icon="pi pi-history"
+                  class="p-button-rounded p-button-info mr-2"
+                  (click)="openVersionHistory(glossary)"
+                  pTooltip="Historial de versiones"
+                ></button>
+                <button
+                  pButton
+                  pRipple
+                  icon="pi pi-tag"
+                  class="p-button-rounded p-button-warning mr-2"
+                  (click)="createNewVersion(glossary)"
+                  pTooltip="Nueva versión"
+                ></button>
+                <button
+                  pButton
+                  pRipple
+                  icon="pi pi-trash"
+                  class="p-button-rounded p-button-danger"
+                  (click)="deleteGlossaryItem(glossary)"
+                ></button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="5">No se encontraron términos en el glosario.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>
+
+<!-- Diálogo para crear/editar términos -->
+<p-dialog
+  [(visible)]="glossaryDialog"
+  [style]="{ width: '650px' }"
+  header="{{ selectedGlossary ? 'Editar Término' : 'Nuevo Término' }}"
+  [modal]="true"
+  styleClass="p-fluid"
+>
+  <ng-template pTemplate="content">
+    <form [formGroup]="glossaryForm">
+      <div class="field">
+        <label for="term">Término</label>
+        <input
+          type="text"
+          pInputText
+          id="term"
+          formControlName="term"
+          required
+          autofocus
+        />
+        <small
+          class="p-error"
+          *ngIf="
+            glossaryForm.get('term')?.invalid &&
+            glossaryForm.get('term')?.touched
+          "
+        >
+          El término es requerido.
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="category">Categoría</label>
+        <p-dropdown
+          id="category"
+          [options]="categories"
+          formControlName="categoryId"
+          placeholder="Seleccione una categoría"
+          optionLabel="name"
+          optionValue="id"
+        >
+        </p-dropdown>
+        <small
+          class="p-error"
+          *ngIf="
+            glossaryForm.get('categoryId')?.invalid &&
+            glossaryForm.get('categoryId')?.touched
+          "
+        >
+          La categoría es requerida.
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="definition">Definición</label>
+        <p-editor
+          formControlName="definition"
+          [style]="{ height: '250px' }"
+        ></p-editor>
+        <small
+          class="p-error"
+          *ngIf="
+            glossaryForm.get('definition')?.invalid &&
+            glossaryForm.get('definition')?.touched
+          "
+        >
+          La definición es requerida y debe tener al menos 10 caracteres.
+        </small>
+      </div>
+    </form>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      pRipple
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="glossaryDialog = false"
+    ></button>
+    <button
+      pButton
+      pRipple
+      label="Guardar"
+      icon="pi pi-check"
+      class="p-button-text"
+      (click)="saveGlossaryItem()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Diálogo para crear nueva versión -->
+<p-dialog
+  [(visible)]="versionDialog"
+  [style]="{ width: '650px' }"
+  header="Nueva Versión"
+  [modal]="true"
+  styleClass="p-fluid"
+>
+  <ng-template pTemplate="content">
+    <form [formGroup]="versionForm">
+      <div class="field">
+        <label for="versionNumber">Número de Versión</label>
+        <input
+          type="text"
+          pInputText
+          id="versionNumber"
+          formControlName="versionNumber"
+          required
+        />
+        <small
+          class="p-error"
+          *ngIf="
+            versionForm.get('versionNumber')?.invalid &&
+            versionForm.get('versionNumber')?.touched
+          "
+        >
+          El número de versión es requerido.
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="reasonForChange">Motivo del Cambio</label>
+        <textarea
+          pInputTextarea
+          id="reasonForChange"
+          formControlName="reasonForChange"
+          required
+          rows="3"
+        ></textarea>
+        <small
+          class="p-error"
+          *ngIf="
+            versionForm.get('reasonForChange')?.invalid &&
+            versionForm.get('reasonForChange')?.touched
+          "
+        >
+          El motivo del cambio es requerido.
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="content">Contenido</label>
+        <p-editor
+          formControlName="content"
+          [style]="{ height: '250px' }"
+        ></p-editor>
+        <small
+          class="p-error"
+          *ngIf="
+            versionForm.get('content')?.invalid &&
+            versionForm.get('content')?.touched
+          "
+        >
+          El contenido es requerido.
+        </small>
+      </div>
+    </form>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      pRipple
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="versionDialog = false"
+    ></button>
+    <button
+      pButton
+      pRipple
+      label="Guardar"
+      icon="pi pi-check"
+      class="p-button-text"
+      (click)="saveVersion()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Diálogo para ver historial de versiones -->
+<p-dialog
+  [(visible)]="viewVersionDialog"
+  [style]="{ width: '800px' }"
+  header="Historial de Versiones"
+  [modal]="true"
+>
+  <ng-template pTemplate="content">
+    <div *ngIf="versionHistory.length > 0">
+      <p-table [value]="versionHistory" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Versión</th>
+            <th>Fecha</th>
+            <th>Autor</th>
+            <th>Estado</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-version>
+          <tr>
+            <td>{{ version.versionNumber }}</td>
+            <td>{{ version.createdAt | date : "dd/MM/yyyy HH:mm" }}</td>
+            <td>{{ version.author?.name }}</td>
+            <td>
+              <p-tag
+                [severity]="version.isCurrent ? 'success' : 'info'"
+                [value]="version.isCurrent ? 'Actual' : 'Histórica'"
+              >
+              </p-tag>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="4">
+              <div class="p-2" [innerHTML]="version.content"></div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+    <div *ngIf="versionHistory.length === 0" class="p-3 text-center">
+      No hay versiones anteriores disponibles.
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      pRipple
+      label="Cerrar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="viewVersionDialog = false"
+    ></button>
+  </ng-template>
+</p-dialog>

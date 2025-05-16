@@ -1,0 +1,134 @@
+.content-container {
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  min-height: calc(100vh - 60px); // Ajustar según la altura del header
+
+  .content-header {
+    margin-bottom: 2rem;
+
+    h1 {
+      font-size: 2rem;
+      color: #495057;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      color: #6c757d;
+      font-size: 1rem;
+    }
+  }
+}
+
+.file-type-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+
+  &.document {
+    background-color: #dbeafe;
+    color: #1e40af;
+  }
+
+  &.image {
+    background-color: #e9d5ff;
+    color: #6b21a8;
+  }
+
+  &.video {
+    background-color: #fee2e2;
+    color: #991b1b;
+  }
+
+  &.presentation {
+    background-color: #d1fae5;
+    color: #065f46;
+  }
+
+  &.other {
+    background-color: #e5e7eb;
+    color: #1f2937;
+  }
+}
+
+.upload-instructions {
+  text-align: center;
+  padding: 1.5rem;
+
+  .pi-upload {
+    font-size: 2rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
+  }
+
+  .file-types-allowed,
+  .max-size {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin: 0.5rem 0;
+  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.field {
+  margin-bottom: 1.5rem;
+}
+
+:host ::ng-deep {
+  .p-card {
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1.5rem;
+    height: 100%;
+
+    .p-card-title {
+      font-size: 1.25rem;
+      color: #495057;
+    }
+
+    .p-card-content {
+      padding: 1rem;
+    }
+  }
+
+  .p-fileupload {
+    .p-fileupload-content {
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .p-button {
+      align-self: center;
+    }
+  }
+
+  .p-datatable {
+    .p-datatable-header {
+      background-color: #f8f9fa;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+
+    th {
+      background-color: #f8f9fa;
+      color: #495057;
+      font-weight: 600;
+    }
+  }
+
+  .p-dropdown {
+    width: 100%;
+  }
+
+  .p-chips {
+    width: 100%;
+  }
+}

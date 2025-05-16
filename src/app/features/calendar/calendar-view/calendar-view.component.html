@@ -1,0 +1,241 @@
+<div class="card">
+  <p-toast></p-toast>
+  <p-confirmDialog [style]="{ width: '450px' }"></p-confirmDialog>
+
+  <div class="calendar-container">
+    <div class="card">
+      <p-toolbar styleClass="mb-4 gap-2">
+        <ng-template pTemplate="left">
+          <button
+            pButton
+            pRipple
+            label="Nuevo Evento"
+            icon="pi pi-plus"
+            class="p-button-success mr-2"
+            (click)="handleDateSelect({ start: new Date(), end: new Date(), allDay: false })"
+          ></button>
+        </ng-template>
+        <ng-template pTemplate="right">
+          <span>Leyenda: </span>
+          <span class="color-legend process mr-2">Procesos</span>
+          <span class="color-legend concept mr-2">Conceptos</span>
+          <span class="color-legend file mr-2">Archivos</span>
+          <span class="color-legend default">Otros</span>
+        </ng-template>
+      </p-toolbar>
+
+      <p-card>
+        <div class="calendar-wrapper">
+          <full-calendar #calendar [options]="calendarOptions"></full-calendar>
+        </div>
+      </p-card>
+    </div>
+  </div>
+
+  <!-- Diálogo para crear/editar evento -->
+  <p-dialog
+    [(visible)]="eventDialog"
+    [style]="{ width: '600px' }"
+    [header]="selectedEvent ? 'Editar Evento' : 'Nuevo Evento'"
+    [modal]="true"
+    styleClass="p-fluid"
+  >
+    <form [formGroup]="eventForm">
+      <div class="field">
+        <label for="title">Título</label>
+        <input
+          type="text"
+          pInputText
+          formControlName="title"
+          id="title"
+          required
+          autofocus
+        />
+        <small
+          class="p-error"
+          *ngIf="
+            eventForm.get('title')?.invalid && eventForm.get('title')?.touched
+          "
+        >
+          El título es obligatorio.
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="description">Descripción</label>
+        <textarea
+          pInputTextarea
+          formControlName="description"
+          id="description"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <div class="grid">
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label for="startDate">Fecha de inicio</label>
+            <p-calendar
+              formControlName="startDate"
+              [showTime]="!eventForm.value.isAllDay"
+              dateFormat="dd/mm/yy"
+              [showButtonBar]="true"
+              [showIcon]="true"
+              appendTo="body"
+              required
+            ></p-calendar>
+            <small
+              class="p-error"
+              *ngIf="
+                eventForm.get('startDate')?.invalid &&
+                eventForm.get('startDate')?.touched
+              "
+            >
+              La fecha de inicio es obligatoria.
+            </small>
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label for="endDate">Fecha de fin</label>
+            <p-calendar
+              formControlName="endDate"
+              [showTime]="!eventForm.value.isAllDay"
+              dateFormat="dd/mm/yy"
+              [showButtonBar]="true"
+              [showIcon]="true"
+              appendTo="body"
+              required
+            ></p-calendar>
+            <small
+              class="p-error"
+              *ngIf="
+                eventForm.get('endDate')?.invalid &&
+                eventForm.get('endDate')?.touched
+              "
+            >
+              La fecha de fin es obligatoria.
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-checkbox">
+        <p-checkbox
+          formControlName="isAllDay"
+          [binary]="true"
+          inputId="isAllDay"
+        ></p-checkbox>
+        <label for="isAllDay" class="ml-2">Todo el día</label>
+      </div>
+
+      <div class="field">
+        <label for="userId">Responsable</label>
+        <p-dropdown
+          formControlName="userId"
+          [options]="users"
+          optionLabel="name"
+          optionValue="id"
+          placeholder="Seleccionar Responsable"
+          [required]="true"
+          appendTo="body"
+        ></p-dropdown>
+        <small
+          class="p-error"
+          *ngIf="
+            eventForm.get('userId')?.invalid && eventForm.get('userId')?.touched
+          "
+        >
+          El responsable es obligatorio.
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="relatedType">Tipo de Relación</label>
+        <p-dropdown
+          formControlName="relatedType"
+          [options]="relatedTypes"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccionar Tipo"
+          (onChange)="onRelatedTypeChange($event.value)"
+          appendTo="body"
+        ></p-dropdown>
+      </div>
+
+      <div class="field" *ngIf="eventForm.value.relatedType">
+        <label for="relatedId">Elemento Relacionado</label>
+        <p-dropdown
+          formControlName="relatedId"
+          [options]="relatedItems"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccionar Elemento"
+          appendTo="body"
+        ></p-dropdown>
+      </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        pRipple
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-text"
+        (click)="hideEventDialog()"
+      ></button>
+      <button
+        pButton
+        pRipple
+        *ngIf="selectedEvent"
+        label="Eliminar"
+        icon="pi pi-trash"
+        class="p-button-text p-button-danger"
+        (click)="deleteEvent()"
+      ></button>
+      <button
+        pButton
+        pRipple
+        label="Guardar"
+        icon="pi pi-check"
+        class="p-button-text"
+        (click)="saveEvent()"
+      ></button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Diálogo de confirmación para eliminar evento -->
+  <p-dialog
+    [(visible)]="deleteEventDialog"
+    header="Confirmar"
+    [modal]="true"
+    [style]="{ width: '450px' }"
+  >
+    <div class="confirmation-content">
+      <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem"></i>
+      <span *ngIf="selectedEvent"
+        >¿Está seguro de eliminar el evento <b>{{ selectedEvent.title }}</b
+        >?</span
+      >
+    </div>
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        pRipple
+        icon="pi pi-times"
+        class="p-button-text"
+        label="No"
+        (click)="deleteEventDialog = false"
+      ></button>
+      <button
+        pButton
+        pRipple
+        icon="pi pi-check"
+        class="p-button-text"
+        label="Sí"
+        (click)="confirmDeleteEvent()"
+      ></button>
+    </ng-template>
+  </p-dialog>
+</div>

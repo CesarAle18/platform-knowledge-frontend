@@ -1,0 +1,211 @@
+<div class="content-container">
+  <div class="content-header">
+    <h1>Gestión de Contenido</h1>
+    <p>Suba, organice y administre archivos para la plataforma</p>
+  </div>
+
+  <div class="p-grid">
+    <!-- Formulario de subida de archivos -->
+    <div class="p-col-12 p-md-4">
+      <p-card header="Subir Nuevo Archivo">
+        <form [formGroup]="uploadForm">
+          <div class="p-fluid">
+            <div class="field">
+              <label for="name">Nombre *</label>
+              <input
+                type="text"
+                pInputText
+                id="name"
+                formControlName="name"
+                placeholder="Nombre del archivo"
+                [ngClass]="{
+                  'ng-invalid ng-dirty':
+                    uploadForm.get('name')?.invalid &&
+                    uploadForm.get('name')?.touched
+                }"
+              />
+              <small
+                *ngIf="
+                  uploadForm.get('name')?.invalid &&
+                  uploadForm.get('name')?.touched
+                "
+                class="p-error"
+              >
+                El nombre es requerido
+              </small>
+            </div>
+
+            <div class="field">
+              <label for="description">Descripción</label>
+              <textarea
+                pInputTextarea
+                id="description"
+                formControlName="description"
+                placeholder="Describa el contenido del archivo"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div class="field">
+              <label for="type">Tipo de archivo *</label>
+              <p-dropdown
+                id="type"
+                formControlName="type"
+                [options]="fileTypes"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione un tipo"
+              ></p-dropdown>
+            </div>
+
+            <div class="field">
+              <label for="categoryId">Categoría</label>
+              <p-dropdown
+                id="categoryId"
+                formControlName="categoryId"
+                [options]="categories"
+                optionLabel="name"
+                optionValue="id"
+                placeholder="Seleccione una categoría"
+              ></p-dropdown>
+            </div>
+
+            <div class="field">
+              <label for="conceptId">Concepto</label>
+              <p-dropdown
+                id="conceptId"
+                formControlName="conceptId"
+                [options]="concepts"
+                optionLabel="name"
+                optionValue="id"
+                placeholder="Seleccione un concepto"
+              ></p-dropdown>
+            </div>
+
+            <div class="field">
+              <label for="processId">Proceso</label>
+              <p-dropdown
+                id="processId"
+                formControlName="processId"
+                [options]="processes"
+                optionLabel="title"
+                optionValue="id"
+                placeholder="Seleccione un proceso"
+              ></p-dropdown>
+            </div>
+
+            <div class="field">
+              <label for="tags">Etiquetas</label>
+              <p-chips
+                formControlName="tags"
+                placeholder="Agregar etiqueta"
+                [allowDuplicate]="false"
+              ></p-chips>
+            </div>
+
+            <div class="field">
+              <label>Archivo *</label>
+              <p-fileUpload
+                mode="advanced"
+                [multiple]="false"
+                accept=".pdf,.jpg,.jpeg,.png,.ppt,.pptx,.mp4,.docx"
+                [maxFileSize]="10000000"
+                chooseLabel="Seleccionar"
+                uploadLabel="Subir"
+                cancelLabel="Cancelar"
+                (uploadHandler)="onUpload($event)"
+                [customUpload]="true"
+                [auto]="false"
+              >
+                <ng-template pTemplate="content">
+                  <div class="upload-instructions">
+                    <p><i class="pi pi-upload"></i></p>
+                    <p>
+                      Arrastre y suelte archivos aquí o haga clic para
+                      seleccionar
+                    </p>
+                    <p class="file-types-allowed">
+                      Tipos permitidos: PDF, JPG, PNG, PPT, MP4, DOCX
+                    </p>
+                    <p class="max-size">Tamaño máximo: 10MB</p>
+                  </div>
+                </ng-template>
+              </p-fileUpload>
+            </div>
+          </div>
+        </form>
+      </p-card>
+    </div>
+
+    <!-- Lista de archivos -->
+    <div class="p-col-12 p-md-8">
+      <p-card header="Archivos Disponibles">
+        <p-table
+          [value]="files"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[5, 10, 25]"
+          [loading]="isLoading"
+          styleClass="p-datatable-sm"
+          [tableStyle]="{ 'min-width': '50rem' }"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Nombre</th>
+              <th>Tipo</th>
+              <th>Tamaño</th>
+              <th>Categoría</th>
+              <th>Fecha</th>
+              <th>Acciones</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-file>
+            <tr>
+              <td>{{ file.name }}</td>
+              <td>
+                <span class="file-type-badge" [ngClass]="file.type">
+                  {{ file.type | titlecase }}
+                </span>
+              </td>
+              <td>{{ formatFileSize(file.size) }}</td>
+              <td>{{ file.category?.name || "Sin categoría" }}</td>
+              <td>{{ formatDate(file.createdAt) }}</td>
+              <td>
+                <div class="action-buttons">
+                  <button
+                    pButton
+                    icon="pi pi-eye"
+                    class="p-button-rounded p-button-info p-button-sm"
+                    title="Ver archivo"
+                  ></button>
+                  <button
+                    pButton
+                    icon="pi pi-pencil"
+                    class="p-button-rounded p-button-success p-button-sm"
+                    title="Editar"
+                  ></button>
+                  <button
+                    pButton
+                    icon="pi pi-trash"
+                    class="p-button-rounded p-button-danger p-button-sm"
+                    title="Eliminar"
+                    (click)="deleteFile(file.id!)"
+                  ></button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6" class="text-center">
+                No hay archivos disponibles
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-card>
+    </div>
+  </div>
+</div>
+
+<p-toast position="top-right"></p-toast>
